@@ -21,24 +21,26 @@
 */
 
 
-#define NTP_SERVER "au.pool.ntp.org" //Adjust to your local time perhaps. 
-#define TZ "AEST" // Australian Estern time may be needed for clock display in the future. 
+#define NTP_SERVER "ca.pool.ntp.org" //Adjust to your local time perhaps. 
+#define TZ "PDT" // Australian Estern time may be needed for clock display in the future. 
 
 // No need to change anything bellow
 //
 
 char *mainver = "1.10";
 
-#include <Adafruit_GFX.h>    // Core graphics library
-#include <Adafruit_ST7789.h> // Hardware-specific library for ST7789
+// #include <Adafruit_GFX.h>    // Core graphics library
+//#include <Adafruit_ST7789.h> // Hardware-specific library for ST7789
+#include "rm67162.h"
+#include <TFT_eSPI.h> // Master copy here: https://github.com/Bodmer/TFT_eSPI
 #include <SPI.h>
 #include <Preferences.h> // perstant storage
 
 // Misc Fonts
-#include "Fonts/FreeSans9pt7b.h"
-#include "Fonts/FreeSans12pt7b.h"
-#include "Fonts/FreeSans18pt7b.h"
-#include "Fonts/FreeMono12pt7b.h"
+// #include "Fonts/FreeSans9pt7b.h"
+// #include "Fonts/FreeSans12pt7b.h"
+// #include "Fonts/FreeSans18pt7b.h"
+// #include "Fonts/FreeMono12pt7b.h"
 
 #include <string>
 
@@ -59,7 +61,6 @@ char *mainver = "1.10";
 #endif
 #include <ESPAsyncWebSrv.h>
 
-
 #include <lwip/apps/sntp.h>
 #include <TOTP-RC6236-generator.hpp>
 #include <ESPmDNS.h>
@@ -72,11 +73,13 @@ USBHIDKeyboard Keyboard;
 
 // Init our 5 keys
 int bargraph_pos;
+int bar_width;
+int bar_segments;
 int updateotp;
 long time_x;
-PinButton key1(5);
-PinButton key2(6);
-PinButton key3(9);
+PinButton key1(1);
+PinButton key2(2);
+PinButton key3(3);
 PinButton key4(10);
 PinButton key5(11);
 
@@ -135,39 +138,47 @@ const char* TFA_INPUT_10 = "tfa_seed_5";
 
 
 // Init Screen
-Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST);
+//Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST);
+TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
+TFT_eSprite spr = TFT_eSprite(&tft);
+
+#define WIDTH  536
+#define HEIGHT 240
 
 // Init Preferences
 Preferences preferences;
 
-
 void setup() {
+  Serial.begin(115200);
 
-  // turn on backlite
-  pinMode(TFT_BACKLITE, OUTPUT);
-  digitalWrite(TFT_BACKLITE, HIGH);
+  // // turn on backlite
+  // pinMode(TFT_BACKLITE, OUTPUT);
+  // digitalWrite(TFT_BACKLITE, HIGH);
 
-  // turn on the TFT / I2C power supply
-  pinMode(TFT_I2C_POWER, OUTPUT);
-  digitalWrite(TFT_I2C_POWER, HIGH);
-  delay(10);
+  // // turn on the TFT / I2C power supply
+  // pinMode(TFT_I2C_POWER, OUTPUT);
+  // digitalWrite(TFT_I2C_POWER, HIGH);
+  // delay(10);
 
   // initialize TFT
-  tft.init(135, 240); // Init ST7789 240x135
-  tft.setRotation(3);
-  tft.fillScreen(ST77XX_BLACK);
-  tft.setFont(&FreeSans9pt7b);
+  rm67162_init();
+  lcd_setRotation(3);
+  spr.createSprite(WIDTH, HEIGHT);
+  spr.setSwapBytes(1);
+  spr.fillSprite(TFT_BLACK);
+  spr.setFreeFont(&FreeSans12pt7b);
 
   // Print Bootup
-  tft.setCursor(0, 0);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setTextWrap(true);
-  tft.printf("\n2FA-Sidecar Ver %s\nBy Matt Perkins (C) 2023\n", mainver);
-  tft.printf("Press K1 to enter config/test\n");
+  spr.setCursor(0, 0);
+  spr.setTextColor(TFT_WHITE);
+  spr.setTextWrap(true);
+  spr.printf("\n2FA-Sidecar Ver %s\nBy Matt Perkins (C) 2023\n", mainver);
+  spr.printf("Press K1 to enter config/test\n");
+  lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
 
   // Check for key and go to setup /test mode
   int lcount = 0 ;
-  while (lcount < 140) {
+  while (lcount < 300) {
 
     key1.update();
 
@@ -176,18 +187,21 @@ void setup() {
       ESP.restart();
     }
 
-    tft.printf(".");
-    delay(10);
+    spr.printf(".");
+    lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
+    delay(100);
     lcount++;
   }
 
-  tft.setFont(&FreeSans9pt7b);
-  tft.fillScreen(ST77XX_BLACK);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(1, 15);
-  tft.printf("2FA-Sidecar V%s - startup\n", mainver);
+  spr.setFreeFont(&FreeSans12pt7b);
+  spr.fillSprite(TFT_BLACK);
+  spr.setTextColor(TFT_WHITE);
+  spr.setCursor(0, 20);
+  spr.printf("2FA-Sidecar V%s - startup\n", mainver);
+  lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
 
   preferences.begin("2FA_Sidecar", false);
+  //preferences.clear();      // Uncomment if you need to reset
 
   ssid = preferences.getString("ssid", "");
   password = preferences.getString("password", "");
@@ -209,43 +223,52 @@ void setup() {
   tfa_name_5 = preferences.getString("tfa_name_5", "");
   tfa_seed_5 = preferences.getString("tfa_seed_5", "");
 
+  Serial.print(esp_get_minimum_free_heap_size());
+  Serial.print("\n");
   WiFi.begin(ssid, password);
+  Serial.print(esp_get_minimum_free_heap_size());
+  Serial.print("\n");
 
   sline = 0;
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
-    tft.printf("Establishing WiFi\n");
+    spr.printf("Establishing WiFi\n");
+    lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
     sline = sline + 1;
     if (sline > 4) {
-      tft.fillScreen(ST77XX_BLACK);
-      tft.setTextColor(ST77XX_WHITE);
-      tft.setCursor(3, 5);
+      spr.fillSprite(TFT_BLACK);
+      spr.setTextColor(TFT_WHITE);
+      spr.setCursor(0, 20);
       sline = 0 ;
+      lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
     }
   }
-  tft.print("IP: ");
-  tft.println(WiFi.localIP());
-  tft.print("Wifi: ");
-  tft.print(WiFi.RSSI());
+  spr.setCursor(0, 20);
+  spr.print("IP: ");
+  spr.println(WiFi.localIP());
+  spr.print("Wifi: ");
+  spr.print(WiFi.RSSI());
 
   // start the NTP client
   configTzTime(TZ, NTP_SERVER);
-  tft.println();
-  tft.printf("NTP started:%s", TZ);
+  spr.println();
+  spr.printf("NTP started:%s", TZ);
   time_t t = time(NULL);
-  tft.printf(":%d", t);
-  tft.println();
+  spr.printf(":%d", t);
+  spr.println();
+  lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
 
 
   // Check to seee if we have PIN set and ask if we do.
   pin = preferences.getString("pin", "");
   const char* npin = pin.c_str();
   if (strlen(npin) > 3) {
-    tft.setCursor(25, 25);
-    tft.setFont(&FreeSans12pt7b);
-    tft.fillScreen(ST77XX_BLACK);
-    tft.setTextColor(ST77XX_YELLOW);
-    tft.print("PIN?");
+    spr.setCursor(25, 25);
+    spr.setFreeFont(&FreeSans12pt7b);
+    spr.fillSprite(TFT_WHITE);
+    spr.setTextColor(TFT_YELLOW);
+    spr.print("PIN?");
+    lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
     // read keys for PIN
 
     while (1) {
@@ -264,41 +287,48 @@ void setup() {
       if (key1.isClick()) {
         pinno = pinno + 1;
         in_pin = in_pin + "1";
-        tft.print("*");
+        spr.print("*");
+        lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());  
       }
 
       if (key2.isClick()) {
         pinno = pinno + 1;
         in_pin = in_pin + "2";
-        tft.print("*");
+        spr.print("*");
+        lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
       }
 
       if (key3.isClick()) {
         pinno = pinno + 1;
         in_pin = in_pin + "3";
-        tft.print("*");
+        spr.print("*");
+        lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
       }
 
       if (key4.isClick()) {
         pinno = pinno + 1;
         in_pin = in_pin + "4";
-        tft.print("*");
+        spr.print("*");
+        lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
       }
 
       if (key5.isClick()) {
         pinno = pinno + 1;
         in_pin = in_pin + "5";
-        tft.print("*");
+        spr.print("*");
+        lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
       }
 
       if ( pinno == 4) {
         if (in_pin == npin) {
-          tft.println();
-          tft.println("Correct.");
+          spr.println();
+          spr.println("Correct.");
+          lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
           break;
         } else {
-          tft.println();
-          tft.print("Incorrect!");
+          spr.println();
+          spr.print("Incorrect!");
+          lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
           delay(pindelay);
           ESP.restart();
         }
@@ -310,19 +340,20 @@ void setup() {
   } // end check PIN
 
 
-  tft.setTextColor(ST77XX_WHITE);
+  spr.setTextColor(TFT_WHITE);
 
 
   // Iniz Keyboard and begin display.
-  tft.setFont(&FreeSans9pt7b);
+  spr.setFreeFont(&FreeSans9pt7b);
 
-  tft.println("Iniz USB keybaord\n");
+  spr.println("Iniz USB keybaord\n");
   Keyboard.begin();
   USB.begin();
   delay(2000);
-  tft.fillScreen(ST77XX_BLACK);
-  tft.setTextColor(ST77XX_WHITE);
+  spr.fillSprite(TFT_BLACK);
+  spr.setTextColor(TFT_WHITE);
   updateotp = 1;
+  lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
 
 
 
@@ -353,17 +384,29 @@ void loop() {
   };
 
 
-
+  bar_width = 310;
+  bar_segments = 310/30;
   bargraph_pos = (t % 60);
   if (bargraph_pos > 29) {
     bargraph_pos = bargraph_pos - 30;
   }
 
-  bargraph_pos = bargraph_pos * 3;
-  if (bargraph_pos < 70) {
-    tft.fillCircle(bargraph_pos, 125, 3, ST77XX_GREEN);
+  spr.drawRect(4, 149, 312, 12, TFT_WHITE);
+  lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
+
+  bargraph_pos = bargraph_pos * bar_segments;
+  if (bargraph_pos < 150) {
+    spr.fillRect(5,150, bargraph_pos, 10, TFT_GREEN);
+    lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
+    // spr.fillCircle(5, 155, 4, TFT_GREEN);
+  } else if (bargraph_pos < 250) {
+    // spr.fillCircle(5, 155, 5, TFT_YELLOW);
+    spr.fillRect(5,150, bargraph_pos, 10, TFT_YELLOW);
+    lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
   } else {
-    tft.fillCircle(bargraph_pos, 125, 3, ST77XX_RED);
+    // spr.fillCircle(5, 155, 5, TFT_RED);
+    spr.fillRect(5,150, bargraph_pos, 10, TFT_RED);
+    lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
   }
 
   if (bargraph_pos == 0) {
@@ -375,24 +418,26 @@ void loop() {
 
   if (updateotp == 1) {
     updateotp = 0;
-    tft.setTextColor(ST77XX_YELLOW);
-    tft.setFont(&FreeSans12pt7b);
-    tft.fillScreen(ST77XX_BLACK);
+    spr.setTextColor(TFT_YELLOW);
+    spr.setFreeFont(&FreeSans12pt7b);
+    spr.fillSprite(TFT_BLACK);
 
     // Key 1
     if (String * otp1 = TOTP::currentOTP(tfa_seed_1)) {
-      tft.setCursor(3, 17);
-      tft.setTextColor(ST77XX_RED);
-      tft.setFont(&FreeSans12pt7b);
-      tft.print(tfa_name_1);
-      tft.setCursor(140, 17);
-      tft.setTextColor(ST77XX_YELLOW);
-      tft.setFont(&FreeMono12pt7b);
-      tft.println(*otp1);
+      spr.setCursor(5, 20);
+      spr.setTextColor(TFT_RED);
+      spr.setFreeFont(&FreeSans12pt7b);
+      spr.print(tfa_name_1);
+      spr.setCursor(160, 20);
+      spr.setTextColor(TFT_YELLOW);
+      spr.setFreeFont(&FreeMonoBold12pt7b);
+      spr.println(*otp1);
+      lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
     } else {
-      tft.setCursor(3, 17);
-      tft.setTextColor(ST77XX_RED);
-      tft.print("NO VALID CONFIG");
+      spr.setCursor(5, 20);
+      spr.setTextColor(TFT_RED);
+      spr.print("NO VALID CONFIG");
+      lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
       delay(10000);
       ESP.restart();
 
@@ -400,50 +445,54 @@ void loop() {
 
     // Key 2
     if (String * otp2 = TOTP::currentOTP(tfa_seed_2)) {
-      tft.setCursor(3, 40);
-      tft.setTextColor(ST77XX_RED);
-      tft.setFont(&FreeSans12pt7b);
-      tft.print(tfa_name_2);
-      tft.setCursor(140, 40);
-      tft.setTextColor(ST77XX_YELLOW);
-      tft.setFont(&FreeMono12pt7b);
-      tft.println(*otp2);
+      spr.setCursor(5, 48);
+      spr.setTextColor(TFT_RED);
+      spr.setFreeFont(&FreeSans12pt7b);
+      spr.print(tfa_name_2);
+      spr.setCursor(160, 48);
+      spr.setTextColor(TFT_YELLOW);
+      spr.setFreeFont(&FreeMonoBold12pt7b);
+      spr.println(*otp2);
+      lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
     };
 
     // Key 3
     if (String * otp3 = TOTP::currentOTP(tfa_seed_3)) {
-      tft.setCursor(3, 63);
-      tft.setTextColor(ST77XX_RED);
-      tft.setFont(&FreeSans12pt7b);
-      tft.print(tfa_name_3);
-      tft.setCursor(140, 63);
-      tft.setTextColor(ST77XX_YELLOW);
-      tft.setFont(&FreeMono12pt7b);
-      tft.println(*otp3);
+      spr.setCursor(5, 76);
+      spr.setTextColor(TFT_RED);
+      spr.setFreeFont(&FreeSans12pt7b);
+      spr.print(tfa_name_3);
+      spr.setCursor(160, 76);
+      spr.setTextColor(TFT_YELLOW);
+      spr.setFreeFont(&FreeMonoBold12pt7b);
+      spr.println(*otp3);
+      lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
     };
 
     // Key 4
     if (String * otp4 = TOTP::currentOTP(tfa_seed_4)) {
-      tft.setCursor(3, 86);
-      tft.setTextColor(ST77XX_RED);
-      tft.setFont(&FreeSans12pt7b);
-      tft.print(tfa_name_4);
-      tft.setCursor(140, 86);
-      tft.setTextColor(ST77XX_YELLOW);
-      tft.setFont(&FreeMono12pt7b);
-      tft.println(*otp4);
+      spr.setCursor(5, 104);
+      spr.setTextColor(TFT_RED);
+      spr.setFreeFont(&FreeSans12pt7b);
+      spr.print(tfa_name_4);
+      spr.setCursor(160, 104);
+      spr.setTextColor(TFT_YELLOW);
+      spr.setFreeFont(&FreeMonoBold12pt7b);
+      spr.println(*otp4);
+      lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
     };
 
     // Key 5
     if (String * otp5 = TOTP::currentOTP(tfa_seed_5)) {
-      tft.setCursor(3, 109);
-      tft.setTextColor(ST77XX_RED);
-      tft.setFont(&FreeSans12pt7b);
-      tft.print(tfa_name_5);
-      tft.setCursor(140, 109);
-      tft.setTextColor(ST77XX_YELLOW);
-      tft.setFont(&FreeMono12pt7b);
-      tft.println(*otp5);
+      spr.setCursor(5, 132);
+      spr.setTextColor(TFT_RED);
+      spr.setFreeFont(&FreeSans12pt7b);
+      spr.print(tfa_name_5);
+      spr.setCursor(160, 132);
+      spr.setTextColor(TFT_YELLOW);
+      spr.setFreeFont(&FreeMonoBold12pt7b);
+      spr.println(*otp5);
+      lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
     };
 
     // Make up the rest of the second so we dont fliker the screen.
