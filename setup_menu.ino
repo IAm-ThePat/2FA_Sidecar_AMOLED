@@ -21,46 +21,52 @@
 */
 
 
-void setup_test()
-{
+void setup_test() {
 
 
   int bargraph_pos;
   long time_x;
-  PinButton key1(5);
-  PinButton key2(6);
-  PinButton key3(9);
+  PinButton key1(1);
+  PinButton key2(2);
+  PinButton key3(3);
   PinButton key4(10);
   PinButton key5(11);
 
   int keytest = 0;
-  tft.fillScreen(ST77XX_RED);
+  spr.fillSprite(TFT_RED);
+  lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
   delay(500);
-  tft.fillScreen(ST77XX_GREEN);
+  spr.fillSprite(TFT_YELLOW);
+  lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
   delay(500);
-  tft.fillScreen(ST77XX_BLUE);
+  spr.fillSprite(TFT_GREEN);
+  lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
+  delay(500);
+  spr.fillSprite(TFT_BLUE);
+  lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
   delay(500);
 
 
-  tft.fillScreen(ST77XX_BLACK);
+  spr.fillSprite(TFT_BLACK);
 
-  tft.setFont(&FreeSans12pt7b);
-  tft.setTextColor(ST77XX_WHITE);
+  spr.setFreeFont(&FreeSans12pt7b);
+  spr.setTextColor(TFT_WHITE);
 
-  tft.setCursor(3, 18);
-  tft.print("Key 1");
+  spr.setCursor(3, 18);
+  spr.print("Key 1");
 
-  tft.setCursor(3, 38);
-  tft.print("Key 2");
+  spr.setCursor(3, 38);
+  spr.print("Key 2");
 
-  tft.setCursor(3, 58);
-  tft.print("Key 3");
+  spr.setCursor(3, 58);
+  spr.print("Key 3");
 
-  tft.setCursor(3, 78);
-  tft.print("Key 4");
+  spr.setCursor(3, 78);
+  spr.print("Key 4");
 
-  tft.setCursor(3, 98);
-  tft.print("Key 5");
+  spr.setCursor(3, 98);
+  spr.print("Key 5");
+  lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
 
   while (1) {
     key1.update();
@@ -71,90 +77,105 @@ void setup_test()
 
 
     if (key1.isClick()) {
-      tft.setCursor(65, 18);
-      tft.print("OK");
+      spr.setCursor(65, 18);
+      spr.setTextColor(TFT_GREEN);
+      spr.print("OK");
+      lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
       keytest = keytest + 1;
     }
 
     if (key2.isClick()) {
-      tft.setCursor(65, 38);
-      tft.print("OK");
+      spr.setCursor(65, 38);
+      spr.setTextColor(TFT_GREEN);
+      spr.print("OK");
+      lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
       keytest = keytest + 2;
     }
     if (key3.isClick()) {
-      tft.setCursor(65, 58);
-      tft.print("OK");
+      spr.setCursor(65, 58);
+      spr.setTextColor(TFT_GREEN);
+      spr.print("OK");
+      lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
       keytest = keytest + 3;
     }
     if (key4.isClick()) {
-      tft.setCursor(65, 78);
-      tft.print("OK");
+      spr.setCursor(65, 78);
+      spr.setTextColor(TFT_GREEN);
+      spr.print("OK");
+      lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
       keytest = keytest + 4;
     }
     if (key5.isClick()) {
-      tft.setCursor(65, 98);
-      tft.print("OK");
+      spr.setCursor(65, 98);
+      spr.setTextColor(TFT_GREEN);
+      spr.print("OK");
+      lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
       keytest = keytest + 5;
     }
 
-    if (keytest == 15) {
-      tft.setCursor(105, 58);
-      tft.print("Test Pass");
+    if (keytest >= 14) {
+      spr.setCursor(105, 58);
+      spr.print("Test Pass");
+      lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
       delay(2000);
-      tft.setCursor(0, 0);
-      tft.fillScreen(ST77XX_RED);
+      spr.setCursor(0, 0);
+      spr.fillSprite(TFT_RED);
+      lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
       delay(500);
-      tft.setTextColor(ST77XX_WHITE);
+      spr.setTextColor(TFT_WHITE);
+      lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
       break;
-
-
     }
   }
   wifi_setup();
-
 }
 
-void wifi_setup()
-{
+void wifi_setup() {
 
+  Serial.print(esp_get_minimum_free_heap_size());
+  Serial.print("\n");
   WiFi.mode(WIFI_AP);
   WiFi.softAP(ssid);
+  Serial.print(esp_get_minimum_free_heap_size());
+  Serial.print("\n");
+  delay(3000);
 
-  tft.setCursor(3, 35);
-  tft.fillScreen(ST77XX_RED);
-  tft.printf("Connect via Wifi\nSSID:%s\nthen browse to \nhttp://192.168.4.1", ssid);
+  spr.setCursor(3, 35);
+  spr.fillSprite(TFT_RED);
+  spr.printf("Connect via Wifi\nSSID:%s\nthen browse to \nhttp://192.168.4.1", ssid);
+  lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
 
 
 
   // Send web page with input fields to client
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest * request) {
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send_P(200, "text/html", "<HEAD><TITLE>Matt's 2FA-Sidecar </TITLE></HEAD><BODY><H2>2FA-Sidecar configuration menu - (C) 2023 Matt Perkins - GPL</H2>"
-                    "You may submit only one option at a time - current settings are not displayed for security.<p>"
-                    "<FORM ACTION=\"/get\">SSID: <input type=\"text\" name=\"ssid\"><input type=\"submit\" value=\"Submit\"></form><br>"
-                    "<FORM ACTION=\"/get\">WiFi Password: <input type=\"text\" name=\"password\"><input type=\"submit\" value=\"Submit\"></form><br>"
-                    "<FORM ACTION=\"/get\">Access PIN (4 digits.blank for none) : <input type=\"text\" name=\"pin\"><input type=\"submit\" value=\"Submit\"></form><br>"
+                                      "You may submit only one option at a time - current settings are not displayed for security.<p>"
+                                      "<FORM ACTION=\"/get\">SSID: <input type=\"text\" name=\"ssid\"><input type=\"submit\" value=\"Submit\"></form><br>"
+                                      "<FORM ACTION=\"/get\">WiFi Password: <input type=\"text\" name=\"password\"><input type=\"submit\" value=\"Submit\"></form><br>"
+                                      "<FORM ACTION=\"/get\">Access PIN (4 digits.blank for none) : <input type=\"text\" name=\"pin\"><input type=\"submit\" value=\"Submit\"></form><br>"
 
-                    "<FORM ACTION=\"/get\">2FA Key 1 Name : <input type=\"text\" name=\"tfa_name_1\"><input type=\"submit\" value=\"Submit\"></form><br>"
-                    "<FORM ACTION=\"/get\">2FA Key 1 Seed : <input type=\"text\" name=\"tfa_seed_1\"><input type=\"submit\" value=\"Submit\"></form><br>"
+                                      "<FORM ACTION=\"/get\">2FA Key 1 Name : <input type=\"text\" name=\"tfa_name_1\"><input type=\"submit\" value=\"Submit\"></form><br>"
+                                      "<FORM ACTION=\"/get\">2FA Key 1 Seed : <input type=\"text\" name=\"tfa_seed_1\"><input type=\"submit\" value=\"Submit\"></form><br>"
 
-                    "<FORM ACTION=\"/get\">2FA Key 2 Name : <input type=\"text\" name=\"tfa_name_2\"><input type=\"submit\" value=\"Submit\"></form><br>"
-                    "<FORM ACTION=\"/get\">2FA Key 2 Seed : <input type=\"text\" name=\"tfa_seed_2\"><input type=\"submit\" value=\"Submit\"></form><br>"
+                                      "<FORM ACTION=\"/get\">2FA Key 2 Name : <input type=\"text\" name=\"tfa_name_2\"><input type=\"submit\" value=\"Submit\"></form><br>"
+                                      "<FORM ACTION=\"/get\">2FA Key 2 Seed : <input type=\"text\" name=\"tfa_seed_2\"><input type=\"submit\" value=\"Submit\"></form><br>"
 
-                    "<FORM ACTION=\"/get\">2FA Key 3 Name : <input type=\"text\" name=\"tfa_name_3\"><input type=\"submit\" value=\"Submit\"></form><br>"
-                    "<FORM ACTION=\"/get\">2FA Key 3 Seed : <input type=\"text\" name=\"tfa_seed_3\"><input type=\"submit\" value=\"Submit\"></form><br>"
+                                      "<FORM ACTION=\"/get\">2FA Key 3 Name : <input type=\"text\" name=\"tfa_name_3\"><input type=\"submit\" value=\"Submit\"></form><br>"
+                                      "<FORM ACTION=\"/get\">2FA Key 3 Seed : <input type=\"text\" name=\"tfa_seed_3\"><input type=\"submit\" value=\"Submit\"></form><br>"
 
-                    "<FORM ACTION=\"/get\">2FA Key 4 Name : <input type=\"text\" name=\"tfa_name_4\"><input type=\"submit\" value=\"Submit\"></form><br>"
-                    "<FORM ACTION=\"/get\">2FA Key 4 Seed : <input type=\"text\" name=\"tfa_seed_4\"><input type=\"submit\" value=\"Submit\"></form><br>"
+                                      "<FORM ACTION=\"/get\">2FA Key 4 Name : <input type=\"text\" name=\"tfa_name_4\"><input type=\"submit\" value=\"Submit\"></form><br>"
+                                      "<FORM ACTION=\"/get\">2FA Key 4 Seed : <input type=\"text\" name=\"tfa_seed_4\"><input type=\"submit\" value=\"Submit\"></form><br>"
 
-                    "<FORM ACTION=\"/get\">2FA Key 5 Name : <input type=\"text\" name=\"tfa_name_5\"><input type=\"submit\" value=\"Submit\"></form><br>"
-                    "<FORM ACTION=\"/get\">2FA Key 5 Seed : <input type=\"text\" name=\"tfa_seed_5\"><input type=\"submit\" value=\"Submit\"></form><br>"
+                                      "<FORM ACTION=\"/get\">2FA Key 5 Name : <input type=\"text\" name=\"tfa_name_5\"><input type=\"submit\" value=\"Submit\"></form><br>"
+                                      "<FORM ACTION=\"/get\">2FA Key 5 Seed : <input type=\"text\" name=\"tfa_seed_5\"><input type=\"submit\" value=\"Submit\"></form><br>"
 
-                    "</BODY></HTML>");
+                                      "</BODY></HTML>");
   });
 
 
   // Send a GET request to <ESP_IP>/get?input1=<inputMessage>
-  server.on("/get", HTTP_GET, [] (AsyncWebServerRequest * request) {
+  server.on("/get", HTTP_GET, [](AsyncWebServerRequest *request) {
     String inputMessage;
     String inputParam;
 
@@ -259,10 +280,7 @@ void wifi_setup()
     }
 
 
-    request->send(200, "text/html", "Setting preferences ("
-                  + inputParam + ") with value: " + inputMessage +
-                  "<br><a href=\"/\">Return to Home configuration</a>");
-
+    request->send(200, "text/html", "Setting preferences (" + inputParam + ") with value: " + inputMessage + "<br><a href=\"/\">Return to Home configuration</a>");
   });
 
   server.onNotFound(notFound);
@@ -270,7 +288,6 @@ void wifi_setup()
 
   delay(600000);
   ESP.restart();
-
 }
 
 
