@@ -22,6 +22,27 @@
 */
 
 </PRE>
+<h2>Fork Info</h2>
+<p>I loved the idea of this project, but saught a slighly larger screen due to my aging eyes. I started with the LilyGo T-Display-S3, but then found the Amoled version T-Display-S3-AMOLED. You can get more details about this board from the <a href="https://github.com/Xinyuan-LilyGO/T-Display-S3-AMOLED">Board's repo here</a></p>
+
+<p>There are also a couple important settings for the arduino IDE I'll include below:</p>
+
+| Setting                  | Value                            |
+| :----------------------- | :------------------------------- |
+| USB CDC On Boot          | Enabled                          |
+| CPU Frequency            | 240MHz (WiFi)                    |
+| Core Debug Level         | None                             |
+| USB DFU On Boot          | Enabled                          |
+| Events Run On            | Core 1                           |
+| Flash Mode               | QIO 80MHz                        |
+| Flash Size               | 16MB (128Mb)                     |
+| JTAG Adapter             | Integrated USB JTAG              |
+| Arduino Runs On          | Core 1                           |
+| USB Firmware MSC On Boot | Disabled                         |
+| Partition Scheme         | Huge APP (3MB No OTA/1MB SPIFFS) |
+| PSRAM                    | OPI PSRAM                        |
+| USB Mode                 | Hardware CDC and JTAG            |
+<p></p>
 <h2>About</h2> 
 <p>The 2FA Sidecar is a small external keyboard-like device with five keys specifically designed for generating and sending time-based two-factor authentication (2FA) codes with a single key press. It is primarily designed to be compatible with Google's 2FA implementation known as Time-Based One-Time Password (TOTP), which is specified in RFC 6238.
 </p><p>
