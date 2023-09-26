@@ -109,25 +109,25 @@ String tfa_name_5;
 String tfa_seed_5;
 
 // Paramaters wifi
-const char *PARAM_INPUT_1 = "ssid";
-const char *PARAM_INPUT_2 = "password";
-const char *PARAM_INPUT_3 = "pin";
+const char* PARAM_INPUT_1 = "ssid";
+const char* PARAM_INPUT_2 = "password";
+const char* PARAM_INPUT_3 = "pin";
 
 // Paramaters 2FA
-const char *TFA_INPUT_1 = "tfa_name_1";
-const char *TFA_INPUT_2 = "tfa_seed_1";
+const char* TFA_INPUT_1 = "tfa_name_1";
+const char* TFA_INPUT_2 = "tfa_seed_1";
 
-const char *TFA_INPUT_3 = "tfa_name_2";
-const char *TFA_INPUT_4 = "tfa_seed_2";
+const char* TFA_INPUT_3 = "tfa_name_2";
+const char*TFA_INPUT_4 = "tfa_seed_2";
+ 
+const char* TFA_INPUT_5 = "tfa_name_3";
+const char* TFA_INPUT_6 = "tfa_seed_3";
 
-const char *TFA_INPUT_5 = "tfa_name_3";
-const char *TFA_INPUT_6 = "tfa_seed_3";
+const char* TFA_INPUT_7 = "tfa_name_4";
+const char* TFA_INPUT_8 = "tfa_seed_4";
 
-const char *TFA_INPUT_7 = "tfa_name_4";
-const char *TFA_INPUT_8 = "tfa_seed_4";
-
-const char *TFA_INPUT_9 = "tfa_name_5";
-const char *TFA_INPUT_10 = "tfa_seed_5";
+const char* TFA_INPUT_9 = "tfa_name_5";
+const char* TFA_INPUT_10 = "tfa_seed_5";
 
 
 // init bargraph timer
@@ -264,7 +264,7 @@ void setup() {
 
   // Check to seee if we have PIN set and ask if we do.
   pin = preferences.getString("pin", "");
-  const char *npin = pin.c_str();
+  const char* npin = pin.c_str();
   if (strlen(npin) > 3) {
     spr.setCursor(25, 25);
     spr.setFreeFont(&FreeSans12pt7b);
@@ -457,7 +457,7 @@ void loop() {
     spr.fillSprite(TFT_BLACK);
 
     // Key 1
-    if (String *otp1 = TOTP::currentOTP(tfa_seed_1)) {
+    if (String * otp1 = TOTP::currentOTP(tfa_seed_1)) {
       spr.setCursor(35, 36);
       spr.setTextColor(TFT_RED);
       spr.setFreeFont(&FreeSans24pt7b);
@@ -476,7 +476,7 @@ void loop() {
     };
 
     // Key 2
-    if (String *otp2 = TOTP::currentOTP(tfa_seed_2)) {
+    if (String * otp2 = TOTP::currentOTP(tfa_seed_2)) {
       spr.setCursor(35, 83);
       spr.setTextColor(TFT_RED);
       spr.setFreeFont(&FreeSans24pt7b);
@@ -488,7 +488,7 @@ void loop() {
     };
 
     // Key 3
-    if (String *otp3 = TOTP::currentOTP(tfa_seed_3)) {
+    if (String * otp3 = TOTP::currentOTP(tfa_seed_3)) {
       spr.setCursor(35, 130);
       spr.setTextColor(TFT_RED);
       spr.setFreeFont(&FreeSans24pt7b);
@@ -500,7 +500,7 @@ void loop() {
     };
 
     // Key 4
-    if (String *otp4 = TOTP::currentOTP(tfa_seed_4)) {
+    if (String * otp4 = TOTP::currentOTP(tfa_seed_4)) {
       spr.setCursor(35, 182);
       spr.setTextColor(TFT_RED);
       spr.setFreeFont(&FreeSans24pt7b);
@@ -512,7 +512,7 @@ void loop() {
     };
 
     // Key 5
-    if (String *otp5 = TOTP::currentOTP(tfa_seed_5)) {
+    if (String * otp5 = TOTP::currentOTP(tfa_seed_5)) {
       spr.setCursor(35, 229);
       spr.setTextColor(TFT_RED);
       spr.setFreeFont(&FreeSans24pt7b);
@@ -531,7 +531,7 @@ void loop() {
 
   // check keypress
   if (key1.isClick()) {
-    String *otp1 = TOTP::currentOTP(tfa_seed_1);
+    String * otp1 = TOTP::currentOTP(tfa_seed_1);
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, HIGH);
     Keyboard.println(*otp1);
@@ -539,7 +539,7 @@ void loop() {
   }
 
   if (key2.isClick()) {
-    String *otp2 = TOTP::currentOTP(tfa_seed_2);
+    String * otp2 = TOTP::currentOTP(tfa_seed_2);
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, HIGH);
     Keyboard.println(*otp2);
@@ -547,7 +547,7 @@ void loop() {
   }
 
   if (key3.isClick()) {
-    String *otp3 = TOTP::currentOTP(tfa_seed_3);
+    String * otp3 = TOTP::currentOTP(tfa_seed_3);
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, HIGH);
     Keyboard.println(*otp3);
@@ -555,7 +555,7 @@ void loop() {
   }
 
   if (key4.isClick()) {
-    String *otp4 = TOTP::currentOTP(tfa_seed_4);
+    String * otp4 = TOTP::currentOTP(tfa_seed_4);
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, HIGH);
     Keyboard.println(*otp4);
@@ -563,7 +563,7 @@ void loop() {
   }
 
   if (key5.isClick()) {
-    String *otp5 = TOTP::currentOTP(tfa_seed_5);
+    String * otp5 = TOTP::currentOTP(tfa_seed_5);
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, HIGH);
     Keyboard.println(*otp5);
