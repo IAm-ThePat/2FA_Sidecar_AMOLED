@@ -132,13 +132,8 @@ void setup_test() {
 
 void wifi_setup() {
 
-  Serial.print(esp_get_minimum_free_heap_size());
-  Serial.print("\n");
   WiFi.mode(WIFI_AP);
   WiFi.softAP(ssid);
-  Serial.print(esp_get_minimum_free_heap_size());
-  Serial.print("\n");
-  delay(3000);
 
   spr.setCursor(3, 35);
   spr.fillSprite(TFT_RED);

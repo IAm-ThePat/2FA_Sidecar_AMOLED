@@ -21,8 +21,8 @@
 */
 
 
-#define NTP_SERVER "ca.pool.ntp.org" //Adjust to your local time perhaps. 
-#define TZ "PDT" // Australian Estern time may be needed for clock display in the future. 
+#define NTP_SERVER "ca.pool.ntp.org"  //Adjust to your local time perhaps.
+#define TZ "PDT"                      // Australian Estern time may be needed for clock display in the future.
 
 // No need to change anything bellow
 //
@@ -32,9 +32,9 @@ char *mainver = "1.10";
 // #include <Adafruit_GFX.h>    // Core graphics library
 //#include <Adafruit_ST7789.h> // Hardware-specific library for ST7789
 #include "rm67162.h"
-#include <TFT_eSPI.h> // Master copy here: https://github.com/Bodmer/TFT_eSPI
-#include <SPI.h>
-#include <Preferences.h> // perstant storage
+#include <TFT_eSPI.h>  // Master copy here: https://github.com/Bodmer/TFT_eSPI
+// #include <SPI.h>
+#include <Preferences.h>  // perstant storage
 
 // Misc Fonts
 // #include "Fonts/FreeSans9pt7b.h"
@@ -46,7 +46,7 @@ char *mainver = "1.10";
 
 
 
-#include <PinButton.h> // Button Library 
+#include <PinButton.h>  // Button Library
 
 #include <USB.h>
 #include <USBHIDKeyboard.h>
@@ -72,11 +72,6 @@ char *mainver = "1.10";
 USBHIDKeyboard Keyboard;
 
 // Init our 5 keys
-int bargraph_pos;
-int bar_width;
-int bar_segments;
-int updateotp;
-long time_x;
 PinButton key1(1);
 PinButton key2(2);
 PinButton key3(3);
@@ -86,7 +81,7 @@ PinButton key5(11);
 int keytest = 0;
 int sline = 0;
 int pinno = 0;
-String  in_pin;
+String in_pin;
 
 // Incorrect Pin Delay
 int pindelay = 3000;
@@ -94,9 +89,9 @@ int pindelay = 3000;
 AsyncWebServer server(80);
 
 // Setup SSID
-String ssid     = "Key-Sidecar";
+String ssid = "Key-Sidecar";
 String password;
-String  pin;
+String pin;
 
 String tfa_name_1;
 String tfa_seed_1;
@@ -114,27 +109,38 @@ String tfa_name_5;
 String tfa_seed_5;
 
 // Paramaters wifi
-const char* PARAM_INPUT_1 = "ssid";
-const char* PARAM_INPUT_2 = "password";
-const char* PARAM_INPUT_3 = "pin";
+const char *PARAM_INPUT_1 = "ssid";
+const char *PARAM_INPUT_2 = "password";
+const char *PARAM_INPUT_3 = "pin";
 
 // Paramaters 2FA
-const char* TFA_INPUT_1 = "tfa_name_1";
-const char* TFA_INPUT_2 = "tfa_seed_1";
+const char *TFA_INPUT_1 = "tfa_name_1";
+const char *TFA_INPUT_2 = "tfa_seed_1";
 
-const char* TFA_INPUT_3 = "tfa_name_2";
-const char* TFA_INPUT_4 = "tfa_seed_2";
+const char *TFA_INPUT_3 = "tfa_name_2";
+const char *TFA_INPUT_4 = "tfa_seed_2";
 
-const char* TFA_INPUT_5 = "tfa_name_3";
-const char* TFA_INPUT_6 = "tfa_seed_3";
+const char *TFA_INPUT_5 = "tfa_name_3";
+const char *TFA_INPUT_6 = "tfa_seed_3";
 
-const char* TFA_INPUT_7 = "tfa_name_4";
-const char* TFA_INPUT_8 = "tfa_seed_4";
+const char *TFA_INPUT_7 = "tfa_name_4";
+const char *TFA_INPUT_8 = "tfa_seed_4";
 
-const char* TFA_INPUT_9 = "tfa_name_5";
-const char* TFA_INPUT_10 = "tfa_seed_5";
+const char *TFA_INPUT_9 = "tfa_name_5";
+const char *TFA_INPUT_10 = "tfa_seed_5";
 
 
+// init bargraph timer
+
+int bargraph_pos;
+int bar_height;
+int bar_segments;
+int updateotp;
+long time_x;
+
+int bargraph_2_pos;
+int bar_2_height;
+int bar_2_segments;
 
 
 // Init Screen
@@ -142,13 +148,14 @@ const char* TFA_INPUT_10 = "tfa_seed_5";
 TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
 TFT_eSprite spr = TFT_eSprite(&tft);
 
-#define WIDTH  536
+#define WIDTH 536
 #define HEIGHT 240
 
 // Init Preferences
 Preferences preferences;
 
 void setup() {
+
   Serial.begin(115200);
 
   // // turn on backlite
@@ -177,7 +184,7 @@ void setup() {
   lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
 
   // Check for key and go to setup /test mode
-  int lcount = 0 ;
+  int lcount = 0;
   while (lcount < 300) {
 
     key1.update();
@@ -223,11 +230,7 @@ void setup() {
   tfa_name_5 = preferences.getString("tfa_name_5", "");
   tfa_seed_5 = preferences.getString("tfa_seed_5", "");
 
-  Serial.print(esp_get_minimum_free_heap_size());
-  Serial.print("\n");
   WiFi.begin(ssid, password);
-  Serial.print(esp_get_minimum_free_heap_size());
-  Serial.print("\n");
 
   sline = 0;
   while (WiFi.status() != WL_CONNECTED) {
@@ -239,7 +242,7 @@ void setup() {
       spr.fillSprite(TFT_BLACK);
       spr.setTextColor(TFT_WHITE);
       spr.setCursor(0, 20);
-      sline = 0 ;
+      sline = 0;
       lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
     }
   }
@@ -261,7 +264,7 @@ void setup() {
 
   // Check to seee if we have PIN set and ask if we do.
   pin = preferences.getString("pin", "");
-  const char* npin = pin.c_str();
+  const char *npin = pin.c_str();
   if (strlen(npin) > 3) {
     spr.setCursor(25, 25);
     spr.setFreeFont(&FreeSans12pt7b);
@@ -288,7 +291,7 @@ void setup() {
         pinno = pinno + 1;
         in_pin = in_pin + "1";
         spr.print("*");
-        lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());  
+        lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
       }
 
       if (key2.isClick()) {
@@ -319,7 +322,7 @@ void setup() {
         lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
       }
 
-      if ( pinno == 4) {
+      if (pinno == 4) {
         if (in_pin == npin) {
           spr.println();
           spr.println("Correct.");
@@ -337,7 +340,7 @@ void setup() {
 
 
 
-  } // end check PIN
+  }  // end check PIN
 
 
   spr.setTextColor(TFT_WHITE);
@@ -347,16 +350,13 @@ void setup() {
   spr.setFreeFont(&FreeSans9pt7b);
 
   spr.println("Iniz USB keybaord\n");
-  Keyboard.begin();
-  USB.begin();
-  delay(2000);
+  lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
+  // Keyboard.begin();
+  // USB.begin();
+  // delay(2000);
   spr.fillSprite(TFT_BLACK);
   spr.setTextColor(TFT_WHITE);
   updateotp = 1;
-  lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
-
-
-
 }
 
 void loop() {
@@ -383,33 +383,67 @@ void loop() {
     return;
   };
 
-
-  bar_width = 310;
-  bar_segments = 310/30;
+  // Left Bar Graph
+  bar_height = 230;
+  bar_segments = 230 / 30;
   bargraph_pos = (t % 60);
   if (bargraph_pos > 29) {
     bargraph_pos = bargraph_pos - 30;
   }
 
-  spr.drawRect(4, 149, 312, 12, TFT_WHITE);
+  spr.drawRect(4, 4, 17, 232, TFT_WHITE);
   lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
 
   bargraph_pos = bargraph_pos * bar_segments;
-  if (bargraph_pos < 150) {
-    spr.fillRect(5,150, bargraph_pos, 10, TFT_GREEN);
+  if (bargraph_pos < 115) {
+    spr.fillRect(5, 5, 15, bargraph_pos, TFT_GREEN);
     lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
     // spr.fillCircle(5, 155, 4, TFT_GREEN);
-  } else if (bargraph_pos < 250) {
+  } else if (bargraph_pos < 192) {
     // spr.fillCircle(5, 155, 5, TFT_YELLOW);
-    spr.fillRect(5,150, bargraph_pos, 10, TFT_YELLOW);
+    spr.fillRect(5, 5, 15, bargraph_pos, TFT_YELLOW);
     lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
   } else {
     // spr.fillCircle(5, 155, 5, TFT_RED);
-    spr.fillRect(5,150, bargraph_pos, 10, TFT_RED);
+    spr.fillRect(5, 5, 15, bargraph_pos, TFT_RED);
     lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
   }
 
+  // Right Hand bar graph
+  bar_2_height = 230;
+  bar_2_segments = 230 / 30;
+  bargraph_2_pos = (t % 60);
+  if (bargraph_2_pos > 29) {
+    bargraph_2_pos = bargraph_2_pos - 30;
+  }
+
+  spr.drawRect((WIDTH-20), 4, 17, 232, TFT_WHITE);
+  lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
+
+  bargraph_2_pos = bargraph_2_pos * bar_2_segments;
+  if (bargraph_2_pos < 115) {
+    spr.fillRect((WIDTH-19), 5, 15, bargraph_2_pos, TFT_GREEN);
+    lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
+    // spr.fillCircle(5, 155, 4, TFT_GREEN);
+  } else if (bargraph_2_pos < 192) {
+    // spr.fillCircle(5, 155, 5, TFT_YELLOW);
+    spr.fillRect((WIDTH-19), 5, 15, bargraph_2_pos, TFT_YELLOW);
+    lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
+  } else {
+    // spr.fillCircle(5, 155, 5, TFT_RED);
+    spr.fillRect((WIDTH-19), 5, 15, bargraph_2_pos, TFT_RED);
+    lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
+  }
+
+
   if (bargraph_pos == 0) {
+    Serial.println(ESP.getFreeHeap());
+    spr.deleteSprite();
+    spr.createSprite(WIDTH, HEIGHT);
+    Serial.println(ESP.getFreeHeap());
+    if (ESP.getFreeHeap() <= 150000) {
+      ESP.restart();
+    }
     updateotp = 1;
   }
 
@@ -423,87 +457,81 @@ void loop() {
     spr.fillSprite(TFT_BLACK);
 
     // Key 1
-    if (String * otp1 = TOTP::currentOTP(tfa_seed_1)) {
-      spr.setCursor(5, 20);
+    if (String *otp1 = TOTP::currentOTP(tfa_seed_1)) {
+      spr.setCursor(35, 36);
       spr.setTextColor(TFT_RED);
-      spr.setFreeFont(&FreeSans12pt7b);
+      spr.setFreeFont(&FreeSans24pt7b);
       spr.print(tfa_name_1);
-      spr.setCursor(160, 20);
+      spr.setCursor((WIDTH-200), 36);
       spr.setTextColor(TFT_YELLOW);
-      spr.setFreeFont(&FreeMonoBold12pt7b);
+      spr.setFreeFont(&FreeMonoBold24pt7b);
       spr.println(*otp1);
-      lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
     } else {
-      spr.setCursor(5, 20);
+      spr.setCursor(35, 36);
       spr.setTextColor(TFT_RED);
       spr.print("NO VALID CONFIG");
       lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
       delay(10000);
       ESP.restart();
-
     };
 
     // Key 2
-    if (String * otp2 = TOTP::currentOTP(tfa_seed_2)) {
-      spr.setCursor(5, 48);
+    if (String *otp2 = TOTP::currentOTP(tfa_seed_2)) {
+      spr.setCursor(35, 83);
       spr.setTextColor(TFT_RED);
-      spr.setFreeFont(&FreeSans12pt7b);
+      spr.setFreeFont(&FreeSans24pt7b);
       spr.print(tfa_name_2);
-      spr.setCursor(160, 48);
+      spr.setCursor((WIDTH-200), 83);
       spr.setTextColor(TFT_YELLOW);
-      spr.setFreeFont(&FreeMonoBold12pt7b);
+      spr.setFreeFont(&FreeMonoBold24pt7b);
       spr.println(*otp2);
-      lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
     };
 
     // Key 3
-    if (String * otp3 = TOTP::currentOTP(tfa_seed_3)) {
-      spr.setCursor(5, 76);
+    if (String *otp3 = TOTP::currentOTP(tfa_seed_3)) {
+      spr.setCursor(35, 130);
       spr.setTextColor(TFT_RED);
-      spr.setFreeFont(&FreeSans12pt7b);
+      spr.setFreeFont(&FreeSans24pt7b);
       spr.print(tfa_name_3);
-      spr.setCursor(160, 76);
+      spr.setCursor((WIDTH-200), 130);
       spr.setTextColor(TFT_YELLOW);
-      spr.setFreeFont(&FreeMonoBold12pt7b);
+      spr.setFreeFont(&FreeMonoBold24pt7b);
       spr.println(*otp3);
-      lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
     };
 
     // Key 4
-    if (String * otp4 = TOTP::currentOTP(tfa_seed_4)) {
-      spr.setCursor(5, 104);
+    if (String *otp4 = TOTP::currentOTP(tfa_seed_4)) {
+      spr.setCursor(35, 182);
       spr.setTextColor(TFT_RED);
-      spr.setFreeFont(&FreeSans12pt7b);
+      spr.setFreeFont(&FreeSans24pt7b);
       spr.print(tfa_name_4);
-      spr.setCursor(160, 104);
+      spr.setCursor((WIDTH-200), 182);
       spr.setTextColor(TFT_YELLOW);
-      spr.setFreeFont(&FreeMonoBold12pt7b);
+      spr.setFreeFont(&FreeMonoBold24pt7b);
       spr.println(*otp4);
-      lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
     };
 
     // Key 5
-    if (String * otp5 = TOTP::currentOTP(tfa_seed_5)) {
-      spr.setCursor(5, 132);
+    if (String *otp5 = TOTP::currentOTP(tfa_seed_5)) {
+      spr.setCursor(35, 229);
       spr.setTextColor(TFT_RED);
-      spr.setFreeFont(&FreeSans12pt7b);
+      spr.setFreeFont(&FreeSans24pt7b);
       spr.print(tfa_name_5);
-      spr.setCursor(160, 132);
+      spr.setCursor((WIDTH-200), 229);
       spr.setTextColor(TFT_YELLOW);
-      spr.setFreeFont(&FreeMonoBold12pt7b);
+      spr.setFreeFont(&FreeMonoBold24pt7b);
       spr.println(*otp5);
       lcd_PushColors(0, 0, WIDTH, HEIGHT, (uint16_t *)spr.getPointer());
     };
 
     // Make up the rest of the second so we dont fliker the screen.
     delay(999);
-
   }
 
 
   // check keypress
   if (key1.isClick()) {
-    String * otp1 = TOTP::currentOTP(tfa_seed_1);
+    String *otp1 = TOTP::currentOTP(tfa_seed_1);
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, HIGH);
     Keyboard.println(*otp1);
@@ -511,7 +539,7 @@ void loop() {
   }
 
   if (key2.isClick()) {
-    String * otp2 = TOTP::currentOTP(tfa_seed_2);
+    String *otp2 = TOTP::currentOTP(tfa_seed_2);
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, HIGH);
     Keyboard.println(*otp2);
@@ -519,7 +547,7 @@ void loop() {
   }
 
   if (key3.isClick()) {
-    String * otp3 = TOTP::currentOTP(tfa_seed_3);
+    String *otp3 = TOTP::currentOTP(tfa_seed_3);
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, HIGH);
     Keyboard.println(*otp3);
@@ -527,7 +555,7 @@ void loop() {
   }
 
   if (key4.isClick()) {
-    String * otp4 = TOTP::currentOTP(tfa_seed_4);
+    String *otp4 = TOTP::currentOTP(tfa_seed_4);
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, HIGH);
     Keyboard.println(*otp4);
@@ -535,7 +563,7 @@ void loop() {
   }
 
   if (key5.isClick()) {
-    String * otp5 = TOTP::currentOTP(tfa_seed_5);
+    String *otp5 = TOTP::currentOTP(tfa_seed_5);
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, HIGH);
     Keyboard.println(*otp5);
@@ -545,7 +573,4 @@ void loop() {
   if (key5.isLongClick()) {
     ESP.restart();
   }
-
-
-
 }
