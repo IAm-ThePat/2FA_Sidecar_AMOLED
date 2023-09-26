@@ -118,7 +118,7 @@ const char* TFA_INPUT_1 = "tfa_name_1";
 const char* TFA_INPUT_2 = "tfa_seed_1";
 
 const char* TFA_INPUT_3 = "tfa_name_2";
-const char*TFA_INPUT_4 = "tfa_seed_2";
+const char* TFA_INPUT_4 = "tfa_seed_2";
  
 const char* TFA_INPUT_5 = "tfa_name_3";
 const char* TFA_INPUT_6 = "tfa_seed_3";
